@@ -101,7 +101,10 @@ class HLTVClient:
         max_retries: int = 3,
         retry_base_delay: float = 1.5,
         proxy_pool: ProxyPool | bool | None = None,
+        offline: bool = False,
     ) -> None:
+        # offline=True: never touch the network; a cache miss raises HLTVError.
+        self.offline = offline
         self.timeout = timeout
         self.max_retries = max(0, max_retries)
         self.retry_base_delay = max(0.0, retry_base_delay)
@@ -179,6 +182,8 @@ class HLTVClient:
             hit = self.cache.get(method, path, params, ttl=ttl)
             if hit is not None:
                 return hit
+        if self.offline:
+            raise HLTVError(0, f"offline cache miss: {path} {params}")
         url = f"{BASE_URL}/{path.lstrip('/')}"
         resp = None
         last_error: Exception | None = None

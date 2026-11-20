@@ -133,6 +133,8 @@ def run_one(
     name: str,
     n_sims: int,
     blends: dict | None = None,
+    strength_kwargs: dict | None = None,
+    rank_source: str = "hltv",
 ) -> dict:
     print(f"\n=== {name} ({event_id}) ===")
     event = client.get_event(event_id)
@@ -147,9 +149,18 @@ def run_one(
     stage_records = previous_stage_records(client, event.name, event.team_ids)
     if stage_records:
         print(f"  carryover from previous stage: {len(stage_records)} teams")
+    kwargs = dict(strength_kwargs or {})
+    if rank_source == "vrs":
+        # Drop the HLTV world rank and seed Elo straight from VRS points
+        # (the Team.vrs_rank field actually carries VRS points).
+        teams = client.bulk_teams(event.team_ids)
+        kwargs["seed_elo_by_team"] = {
+            t.id: float(t.vrs_rank) for t in teams if t.vrs_rank
+        }
     strengths = build_team_strengths(
         client, event.team_ids, cutoff,
         stage_entry_records_by_team=stage_records,
+        **kwargs,
     )
     h2h = collect_h2h(client, event.team_ids, cutoff)
     r1 = extract_r1_pairings(client, event_id)
@@ -213,12 +224,17 @@ def main() -> int:
     parser.add_argument("--cache-dir", default="cache")
     parser.add_argument("--n-sims", type=int, default=20_000)
     parser.add_argument("--no-proxy", action="store_true")
+    parser.add_argument(
+        "--offline", action="store_true",
+        help="serve everything from the cache, never touch the network",
+    )
     args = parser.parse_args()
 
-    cache = DiskCache(base_dir=args.cache_dir)
+    cache = DiskCache(base_dir=args.cache_dir, ignore_ttl=args.offline)
     client = HLTVClient(
         cache=cache,
-        proxy_pool=False if args.no_proxy else None,
+        proxy_pool=False if (args.no_proxy or args.offline) else None,
+        offline=args.offline,
     )
 
     results = []

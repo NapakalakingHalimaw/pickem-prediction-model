@@ -1,0 +1,32 @@
+{
+  "name": "PGL Singapore Major 2026 Stage 2 (hypothetical: model's Stage 1 advancers)",
+  "cutoff": "2026-11-28T04:00:00Z",
+  "all_matches_bo3": false,
+  "notes": "HYPOTHETICAL. Invites per the in-game Pick'em as of 2026-11-20 (FUT and MIBR in Stage 2, NiP in Stage 1; 1win plays as THE ONE). Stage 1 advancers and records = the model's top Stage 1 ticket (3-1 vs 3-2 split assumed by strength). Seeds: invites 1-8 by VRS, advancers 9-16 by Stage 1 record then VRS. R1 pairings assumed seed i vs seed i+8; replace with the real pairings once Stage 1 ends. Cutoff time assumed.",
+  "teams": [
+    {"id": 1, "name": "FUT"},
+    {"id": 2, "name": "Nemiga"},
+    {"id": 3, "name": "G2"},
+    {"id": 4, "name": "1win"},
+    {"id": 5, "name": "Natus Vincere"},
+    {"id": 6, "name": "Astralis"},
+    {"id": 7, "name": "The MongolZ"},
+    {"id": 8, "name": "MIBR"},
+    {"id": 9, "name": "HEROIC"},
+    {"id": 10, "name": "100 Thieves"},
+    {"id": 11, "name": "Ninjas in Pyjamas"},
+    {"id": 12, "name": "PARIVISION"},
+    {"id": 13, "name": "FaZe"},
+    {"id": 14, "name": "Liquid"},
+    {"id": 15, "name": "Eternal Fire"},
+    {"id": 16, "name": "M80"}
+  ],
+  "r1_pairings": [[1, 9], [2, 10], [3, 11], [4, 12], [5, 13], [6, 14], [7, 15], [8, 16]],
+  "initial_seeds": {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8,
+                    "9": 9, "10": 10, "11": 11, "12": 12, "13": 13, "14": 14, "15": 15, "16": 16},
+  "stage_entry_records": {
+    "9": [3, 0], "10": [3, 0],
+    "11": [3, 1], "12": [3, 1], "13": [3, 1],
+    "14": [3, 2], "15": [3, 2], "16": [3, 2]
+  }
+}

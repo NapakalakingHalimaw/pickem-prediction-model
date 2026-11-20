@@ -93,15 +93,21 @@ class DiskCache:
         Cache root. Defaults to ``~/.cache/hltv``.
     enabled : bool, default ``True``
         Set False to bypass all reads/writes (e.g. for debugging).
+    ignore_ttl : bool, default ``False``
+        Serve every cached entry regardless of age.
     """
 
     def __init__(
         self,
         base_dir: str | Path | None = None,
         enabled: bool = True,
+        ignore_ttl: bool = False,
     ) -> None:
         self.base = Path(base_dir or _default_cache_dir())
         self.enabled = enabled
+        # When True, every cached entry is served regardless of age. Used for
+        # offline runs against the bundled snapshot.
+        self.ignore_ttl = ignore_ttl
         self.base.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
         self._hits = 0
@@ -148,6 +154,8 @@ class DiskCache:
             return None
         ts = blob.get("_ts", 0)
         actual_ttl = ttl if ttl is not None else _ttl_for(path)
+        if self.ignore_ttl:
+            actual_ttl = -1
         if actual_ttl == 0:
             self._misses += 1
             return None

@@ -14,6 +14,45 @@ Two packages live in this repo:
 - `pickem/` - Swiss-format Monte-Carlo simulator and ticket optimizer
   for the HLTV Major pickem challenge (2x 3-0, 6x advance, 2x 0-3).
 
+## Running without HLTV (Valve VRS data)
+
+As of November 2026 the HLTV mobile API rejects this client with
+HTTP 401, so fresh HLTV data can no longer be fetched. `pickem/vrs_model.py`
+builds the same `TeamStrength` objects from Valve's public Regional
+Standings repository instead (VRS points plus a dated series W/L history
+for every ranked roster). The Swiss simulator and ticket optimizer are
+unchanged.
+
+```bash
+python predict_vrs.py data/events/pgl_singapore_2026_stage1.json --sync --n-sims 20000
+```
+
+`--sync` clones/updates the Valve repo into `data/vrs_repo/` (~25 MB, git).
+For Stages 2/3, copy the event JSON, fill in the 16 teams, Round 1
+pairings, cutoff, `"all_matches_bo3"` and the qualifying records in
+`"stage_entry_records"`.
+
+What the VRS data lacks: map names and round scores (no veto/map-pool
+model, series-level instead of map-level Elo), player ratings, HLTV
+world rank. VRS points are rescaled to map-level Elo by a factor fitted
+on all pre-cutoff series (0.30).
+
+Validation (`python compare_vrs.py`, 5,000 sims, offline from the
+bundled cache):
+
+| Model | Correct picks (avg of 3 stages) | Log-loss of team outcomes |
+|---|---:|---:|
+| Original HLTV model | 6.0/10 | 0.926 |
+| HLTV, leak-free signals only | 5.0/10 | 1.127 |
+| VRS-only model | 4.3/10 | 1.101 |
+| VRS baseline (Valve snapshot) | 5.0/10 | - |
+
+The bundled HLTV cache was fetched on 2026-06-10, after every backtest
+stage, so the original model's world rank, player ratings, map stats and
+VRS points already contain the results it is scored on. With only the
+cutoff-filtered HLTV signals (map-level Elo, form, H2H) it is no better
+than the VRS-only model. Three stages are far too few to rank the models.
+
 ## Results so far
 
 ### Backtest

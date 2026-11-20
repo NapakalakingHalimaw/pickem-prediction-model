@@ -455,6 +455,9 @@ def build_team_strengths(
     use_player_trends: bool = True,
     use_event_history: bool = True,
     use_style_stats: bool = False,
+    use_roster_rating: bool = True,
+    seed_elo_by_team: dict[int, float] | None = None,
+    use_map_pool: bool = True,
 ) -> dict[int, TeamStrength]:
     """
     Fetch every team and compute its strength snapshot as of ``cutoff``.
@@ -504,6 +507,15 @@ def build_team_strengths(
         If False, disables post-match opening/pistol/flash/multi/clutch
         style aggregation. Current backtests keep this off by default
         because the aggregate is not predictive enough yet.
+    use_roster_rating : bool, default True
+        If False, the roster Rating 3.0 mean does not move base Elo.
+        Used to measure how much the HLTV-only player ratings matter.
+    seed_elo_by_team : optional
+        Starting Elo per team. Replaces the world-rank/VRS seed from
+        ``_elo_from_rank`` (e.g. seed straight from Valve VRS points).
+    use_map_pool : bool, default True
+        If False, teams get no map-pool stats (veto picks random maps).
+        The team endpoint's map stats are not cutoff-filtered.
 
     Returns
     -------
@@ -548,7 +560,10 @@ def build_team_strengths(
     for t in teams:
         world_rank = world_rank_by_team.get(t.id, t.world_rank)
         vrs_seed = vrs_points_by_team.get(t.id, t.vrs_rank)
-        e = _elo_from_rank(world_rank, vrs_seed)
+        if seed_elo_by_team and t.id in seed_elo_by_team:
+            e = float(seed_elo_by_team[t.id])
+        else:
+            e = _elo_from_rank(world_rank, vrs_seed)
         snapshot_players = lineup_players_by_team.get(t.id) or []
         snapshot_ratings = [
             r for r in (p.rating_past_3_months or p.rating for p in snapshot_players)
@@ -559,7 +574,7 @@ def build_team_strengths(
             if snapshot_ratings
             else t.average_roster_rating()
         )
-        if roster is not None:
+        if roster is not None and use_roster_rating:
             e += 500.0 * (roster - 1.00)
         base_elo[t.id] = e
         rosters[t.id] = roster
@@ -641,7 +656,7 @@ def build_team_strengths(
 
         # Snapshot map pool (free from cached match payload)
         pool_dict: dict[str, dict[str, float]] = dict(map_pool_by_team.get(t.id) or {})
-        if not pool_dict:
+        if not pool_dict and use_map_pool:
             for name, entry in t.map_pool().items():
                 pool_dict[name] = {
                     "win_rate": entry.win_rate or 0.5,

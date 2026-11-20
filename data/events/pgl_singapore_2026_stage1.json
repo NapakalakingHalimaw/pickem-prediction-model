@@ -1,0 +1,30 @@
+{
+  "name": "PGL Singapore Major 2026 Stage 1",
+  "cutoff": "2026-11-24T04:00:00Z",
+  "all_matches_bo3": false,
+  "sources": [
+    "https://www.pglesports.com/cs2/pgl-major-singapore-2026/",
+    "https://pley.gg/cs2/every-team-at-the-pgl-major-singapore/"
+  ],
+  "notes": "Cutoff = first R1 match, 24 Nov 12:00 Singapore time (UTC+8), assumed. R1 is all BO1. GOSH = BC.Game roster.",
+  "teams": [
+    {"id": 1, "name": "HEROIC"},
+    {"id": 2, "name": "Imperial"},
+    {"id": 3, "name": "9z"},
+    {"id": 4, "name": "Lynn Vision"},
+    {"id": 5, "name": "Ninjas in Pyjamas"},
+    {"id": 6, "name": "M80"},
+    {"id": 7, "name": "100 Thieves"},
+    {"id": 8, "name": "Chinggis Warriors"},
+    {"id": 9, "name": "Liquid"},
+    {"id": 10, "name": "GOSH"},
+    {"id": 11, "name": "PARIVISION"},
+    {"id": 12, "name": "DENDELE"},
+    {"id": 13, "name": "FaZe"},
+    {"id": 14, "name": "Wildcard"},
+    {"id": 15, "name": "Eternal Fire"},
+    {"id": 16, "name": "FlyQuest"}
+  ],
+  "r1_pairings": [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12], [13, 14], [15, 16]],
+  "stage_entry_records": {}
+}
