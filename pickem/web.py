@@ -21,6 +21,13 @@ class SiteError(Exception):
 
 
 class Site:
+    # HTTP 429 (too many requests): pause and retry with exponential
+    # backoff (15, 30, 60 min), or for as long as Retry-After says when the
+    # site sends one; stop after the last pause. Any other non-200 answer
+    # (403 included) stops at once: the site is refusing access and
+    # retrying would only make that worse.
+    RATE_LIMIT_PAUSES = (900, 1800, 3600)
+
     def __init__(self, delay=1.2):
         self.session = requests.Session(impersonate="chrome131")
         self.delay = delay
@@ -28,15 +35,34 @@ class Site:
         self.requests = 0
 
     def get(self, path):
-        wait = self.last + self.delay - time.monotonic()
-        if wait > 0:
-            time.sleep(wait)
-        response = self.session.get(BASE + path, timeout=30)
-        self.last = time.monotonic()
-        self.requests += 1
-        if response.status_code != 200:
-            raise SiteError(response.status_code, path)
-        return response.text
+        retries = len(self.RATE_LIMIT_PAUSES)
+        for attempt in range(retries + 1):
+            wait = self.last + self.delay - time.monotonic()
+            if wait > 0:
+                time.sleep(wait)
+            response = self.session.get(BASE + path, timeout=30)
+            self.last = time.monotonic()
+            self.requests += 1
+            if response.status_code == 429 and attempt < retries:
+                pause = retry_after(response) or self.RATE_LIMIT_PAUSES[attempt]
+                resume = datetime.now().timestamp() + pause
+                print(
+                    f"HTTP 429 for {path}: pausing {pause / 60:.0f} min until "
+                    f"{datetime.fromtimestamp(resume):%H:%M} (retry {attempt + 1}/{retries})",
+                    flush=True,
+                )
+                time.sleep(pause)
+                continue
+            if response.status_code != 200:
+                raise SiteError(response.status_code, path)
+            return response.text
+        raise SiteError(429, path)
+
+
+def retry_after(response):
+    """Seconds from a numeric Retry-After header (at least 60), or None."""
+    value = (response.headers.get("Retry-After") or "").strip()
+    return max(60, int(value)) if value.isdigit() else None
 
 
 def iso(unix_ms):

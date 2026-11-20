@@ -159,7 +159,14 @@ def main():
     db = open_db()
     site = web.Site(args.delay)
     since = datetime.fromisoformat(args.since).replace(tzinfo=timezone.utc) if args.since else None
-    count = update(db, site, args.top, args.event, since)
+    try:
+        count = update(db, site, args.top, args.event, since)
+    except web.SiteError as exc:
+        # Keep the matches read so far; a later run continues from the
+        # newest stored match.
+        db.commit()
+        print(f"stopped: {exc} after {site.requests} pages; matches read so far are saved")
+        raise SystemExit(1)
     print(f"done: {count} matches listed, {site.requests} pages read")
 
 
